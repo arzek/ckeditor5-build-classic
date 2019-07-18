@@ -18,6 +18,63 @@ import PasteFromOffice from '@ckeditor/ckeditor5-paste-from-office/src/pastefrom
 import Alignment from '@ckeditor/ckeditor5-alignment/src/alignment';
 import Font from '@ckeditor/ckeditor5-font/src/font';
 
+import Plugin from '@ckeditor/ckeditor5-core/src/plugin';
+import ButtonView from '@ckeditor/ckeditor5-ui/src/button/buttonview';
+
+import imageIcon from '../src/microphone.svg';
+import imageIconActive from '../src/microphoneActive.svg';
+
+class Speech extends Plugin {
+	init() {
+		const editor = this.editor;
+		let state = false;
+		if ( this.editor.config._config.speechToText ) {
+			editor.ui.componentFactory.add( 'speechToText', locale => {
+				const view = new ButtonView( locale );
+				view.set( {
+					label: 'Speech to text',
+					icon: imageIcon,
+					tooltip: true
+				} );
+				view.on( 'execute', () => {
+					state = !state;
+					if ( state ) {
+						this.start();
+						view.set( {
+							label: 'Speech to text',
+							icon: imageIconActive,
+							tooltip: true
+						} );
+					} else {
+						this.stop();
+						view.set( {
+							label: 'Speech to text',
+							icon: imageIcon,
+							tooltip: true
+						} );
+					}
+				} );
+				return view;
+			} );
+		}
+	}
+
+	start() {
+		this.dispatch( true );
+	}
+
+	stop() {
+		this.dispatch( false );
+	}
+
+	dispatch( value ) {
+		const event = new CustomEvent( 'onSpeechToText', {
+			detail: value
+		} );
+		window.dispatchEvent( event );
+	}
+}
+
 export default class ClassicEditor extends ClassicEditorBase {}
 
 // Plugins to include in the build.
@@ -33,6 +90,7 @@ ClassicEditor.builtinPlugins = [
 	PasteFromOffice,
 	Alignment,
 	Font,
+	Speech
 ];
 
 // Editor configuration.
@@ -49,7 +107,8 @@ ClassicEditor.defaultConfig = {
 			'alignment',
 			'fontSize',
 			'undo',
-			'redo'
+			'redo',
+			'speechToText'
 		]
 	},
 	alignment: {
